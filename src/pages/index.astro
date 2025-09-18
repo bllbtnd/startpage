@@ -8,8 +8,21 @@
 		<link rel="stylesheet" href="/style.css" />
 	</head>
 	<body>
+		<button class="clock-toggle" id="clockToggle" title="Toggle Clock">
+			<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+				<circle cx="12" cy="12" r="10"></circle>
+				<polyline points="12,6 12,12 16,14"></polyline>
+			</svg>
+		</button>
+		
 		<div class="search-container">
-			<form class="search-form" id="searchForm" action="https://duckduckgo.com/" method="get">
+			<div class="clock-widget" id="clockWidget">
+				<div class="clock-time" id="clockTime">12:00</div>
+				<div class="clock-date" id="clockDate">Loading...</div>
+			</div>
+			
+			<div class="search-section">
+				<form class="search-form" id="searchForm" action="https://duckduckgo.com/" method="get">
 				<div class="search-engine-selector">
 					<button type="button" class="engine-btn" id="engineBtn">
 						<img src="/favicon.svg" alt="DuckDuckGo" class="engine-icon" id="engineIcon" />
@@ -76,6 +89,7 @@
 					</svg>
 				</button>
 			</form>
+			</div>
 		</div>
 
 		<footer class="footer">
@@ -111,12 +125,12 @@
 			}
 
 			// Save engine to localStorage
-			function saveEngine(engine) {
+			function saveEngine(engine: string) {
 				localStorage.setItem('search-engine', engine);
 			}
 
 			// Update the search form and UI
-			function updateSearchEngine(engine) {
+			function updateSearchEngine(engine: string) {
 				const form = document.getElementById('searchForm') as HTMLFormElement;
 				const engineIcon = document.getElementById('engineIcon') as HTMLImageElement;
 				const searchInput = document.getElementById('searchQuery') as HTMLInputElement;
@@ -145,6 +159,47 @@
 				currentEngine = engine;
 			}
 
+			// Clock functionality
+			function updateClock(): void {
+				const now = new Date();
+				const timeElement = document.getElementById('clockTime') as HTMLElement;
+				const dateElement = document.getElementById('clockDate') as HTMLElement;
+				
+				if (timeElement && dateElement) {
+					timeElement.textContent = now.toLocaleTimeString('en-US', {
+						hour12: false,
+						hour: '2-digit',
+						minute: '2-digit'
+					});
+					
+					dateElement.textContent = now.toLocaleDateString('en-US', {
+						weekday: 'long',
+						year: 'numeric',
+						month: 'long',
+						day: 'numeric'
+					});
+				}
+			}
+
+			function toggleClock(): void {
+				const clockWidget = document.getElementById('clockWidget') as HTMLElement;
+				const isVisible = clockWidget && !clockWidget.hidden;
+				
+				if (clockWidget) {
+					clockWidget.hidden = isVisible;
+					localStorage.setItem('clockVisible', isVisible ? 'false' : 'true');
+				}
+			}
+
+			function loadClockPreference(): void {
+				const clockWidget = document.getElementById('clockWidget') as HTMLElement;
+				const isVisible = localStorage.getItem('clockVisible') !== 'false';
+				
+				if (clockWidget) {
+					clockWidget.hidden = !isVisible;
+				}
+			}
+
 			// Initialize on page load
 			document.addEventListener('DOMContentLoaded', () => {
 				loadSavedEngine();
@@ -152,8 +207,19 @@
 				const engineBtn = document.getElementById('engineBtn');
 				const engineDropdown = document.getElementById('engineDropdown');
 				const searchInput = document.querySelector('.search-input') as HTMLInputElement;
+				const clockToggle = document.getElementById('clockToggle') as HTMLButtonElement;
 				
 				if (!engineBtn || !engineDropdown || !searchInput) return;
+				
+				// Load and start clock
+				loadClockPreference();
+				updateClock();
+				setInterval(updateClock, 1000);
+				
+				// Clock toggle functionality
+				if (clockToggle) {
+					clockToggle.addEventListener('click', toggleClock);
+				}
 				
 				// Toggle dropdown
 				engineBtn.addEventListener('click', (e) => {
