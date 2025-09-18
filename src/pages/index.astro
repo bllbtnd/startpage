@@ -1,7 +1,3 @@
----
-
----
-
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
@@ -13,10 +9,61 @@
 	</head>
 	<body>
 		<div class="search-container">
-			<form class="search-form" action="https://duckduckgo.com/" method="get">
+			<form class="search-form" id="searchForm" action="https://duckduckgo.com/" method="get">
+				<div class="search-engine-selector">
+					<button type="button" class="engine-btn" id="engineBtn">
+						<img src="/favicon.svg" alt="DuckDuckGo" class="engine-icon" id="engineIcon" />
+						<svg class="dropdown-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<polyline points="6,9 12,15 18,9"></polyline>
+						</svg>
+					</button>
+					<div class="engine-dropdown" id="engineDropdown">
+						<div class="engine-option" data-engine="google" data-url="https://www.google.com/search" data-param="q">
+							<img src="https://www.google.com/favicon.ico" alt="Google" class="engine-icon" />
+							<span>Google</span>
+						</div>
+						<div class="engine-option" data-engine="bing" data-url="https://www.bing.com/search" data-param="q">
+							<img src="https://www.bing.com/favicon.ico" alt="Bing" class="engine-icon" />
+							<span>Bing</span>
+						</div>
+						<div class="engine-option" data-engine="yahoo" data-url="https://search.yahoo.com/search" data-param="p">
+							<img src="https://www.yahoo.com/favicon.ico" alt="Yahoo" class="engine-icon" />
+							<span>Yahoo</span>
+						</div>
+						<div class="engine-option active" data-engine="duckduckgo" data-url="https://duckduckgo.com/" data-param="q">
+							<img src="https://duckduckgo.com/favicon.ico" alt="DuckDuckGo" class="engine-icon" />
+							<span>DuckDuckGo</span>
+						</div>
+						<div class="engine-option" data-engine="yandex" data-url="https://yandex.com/search/" data-param="text">
+							<img src="https://yandex.com/favicon.ico" alt="Yandex" class="engine-icon" />
+							<span>Yandex</span>
+						</div>
+						<div class="engine-option" data-engine="baidu" data-url="https://www.baidu.com/s" data-param="wd">
+							<img src="https://www.baidu.com/favicon.ico" alt="Baidu" class="engine-icon" />
+							<span>Baidu</span>
+						</div>
+						<div class="engine-option" data-engine="startpage" data-url="https://www.startpage.com/do/dsearch" data-param="query">
+							<img src="https://www.startpage.com/favicon.ico" alt="Startpage" class="engine-icon" />
+							<span>Startpage</span>
+						</div>
+						<div class="engine-option" data-engine="searx" data-url="https://searx.org/" data-param="q">
+							<img src="https://searx.org/favicon.ico" alt="SearX" class="engine-icon" />
+							<span>SearX</span>
+						</div>
+						<div class="engine-option" data-engine="ecosia" data-url="https://www.ecosia.org/search" data-param="q">
+							<img src="https://www.ecosia.org/favicon.ico" alt="Ecosia" class="engine-icon" />
+							<span>Ecosia</span>
+						</div>
+						<div class="engine-option" data-engine="brave" data-url="https://search.brave.com/search" data-param="q">
+							<img src="https://brave.com/static-assets/images/brave-logo-sans-text.svg" alt="Brave Search" class="engine-icon" />
+							<span>Brave Search</span>
+						</div>
+					</div>
+				</div>
 				<input 
 					type="text" 
 					name="q" 
+					id="searchQuery"
 					class="search-input" 
 					placeholder="Search the web..." 
 					autocomplete="off"
@@ -31,12 +78,106 @@
 			</form>
 		</div>
 
+		<footer class="footer">
+			<a href="https://ballabotond.com" target="_blank" rel="noopener noreferrer" class="credit-link">
+				Made by Balla Botond
+			</a>
+		</footer>
+
 		<script>
-			document.addEventListener('keydown', (e) => {
-				const searchInput = document.querySelector('.search-input') as HTMLElement;
-				if (searchInput && document.activeElement !== searchInput && e.key.length === 1) {
-					searchInput.focus();
+			// Search engine data
+			const searchEngines = {
+				google: { url: 'https://www.google.com/search', param: 'q', icon: 'https://www.google.com/favicon.ico', name: 'Google' },
+				bing: { url: 'https://www.bing.com/search', param: 'q', icon: 'https://www.bing.com/favicon.ico', name: 'Bing' },
+				yahoo: { url: 'https://search.yahoo.com/search', param: 'p', icon: 'https://www.yahoo.com/favicon.ico', name: 'Yahoo' },
+				duckduckgo: { url: 'https://duckduckgo.com/', param: 'q', icon: 'https://duckduckgo.com/favicon.ico', name: 'DuckDuckGo' },
+				yandex: { url: 'https://yandex.com/search/', param: 'text', icon: 'https://yandex.com/favicon.ico', name: 'Yandex' },
+				baidu: { url: 'https://www.baidu.com/s', param: 'wd', icon: 'https://www.baidu.com/favicon.ico', name: 'Baidu' },
+				startpage: { url: 'https://www.startpage.com/do/dsearch', param: 'query', icon: 'https://www.startpage.com/favicon.ico', name: 'Startpage' },
+				searx: { url: 'https://searx.org/', param: 'q', icon: 'https://searx.org/favicon.ico', name: 'SearX' },
+				ecosia: { url: 'https://www.ecosia.org/search', param: 'q', icon: 'https://www.ecosia.org/favicon.ico', name: 'Ecosia' },
+				brave: { url: 'https://search.brave.com/search', param: 'q', icon: 'https://brave.com/static-assets/images/brave-logo-sans-text.svg', name: 'Brave Search' }
+			};
+
+			let currentEngine = 'duckduckgo';
+
+			// Load saved engine from localStorage
+			function loadSavedEngine() {
+				const saved = localStorage.getItem('search-engine');
+				if (saved && searchEngines[saved]) {
+					currentEngine = saved;
 				}
+				updateSearchEngine(currentEngine);
+			}
+
+			// Save engine to localStorage
+			function saveEngine(engine) {
+				localStorage.setItem('search-engine', engine);
+			}
+
+			// Update the search form and UI
+			function updateSearchEngine(engine) {
+				const form = document.getElementById('searchForm');
+				const engineIcon = document.getElementById('engineIcon');
+				const searchInput = document.getElementById('searchQuery');
+				
+				const engineData = searchEngines[engine];
+				
+				// Update form action and input name
+				form.action = engineData.url;
+				searchInput.name = engineData.param;
+				
+				// Update icon
+				engineIcon.src = engineData.icon;
+				engineIcon.alt = engineData.name;
+				
+				// Update active state in dropdown
+				document.querySelectorAll('.engine-option').forEach(option => {
+					option.classList.remove('active');
+				});
+				document.querySelector(`[data-engine="${engine}"]`).classList.add('active');
+				
+				currentEngine = engine;
+			}
+
+			// Initialize on page load
+			document.addEventListener('DOMContentLoaded', () => {
+				loadSavedEngine();
+				
+				const engineBtn = document.getElementById('engineBtn');
+				const engineDropdown = document.getElementById('engineDropdown');
+				const searchInput = document.querySelector('.search-input');
+				
+				// Toggle dropdown
+				engineBtn.addEventListener('click', (e) => {
+					e.preventDefault();
+					engineDropdown.classList.toggle('show');
+				});
+				
+				// Handle engine selection
+				document.querySelectorAll('.engine-option').forEach(option => {
+					option.addEventListener('click', () => {
+						const engine = option.dataset.engine;
+						updateSearchEngine(engine);
+						saveEngine(engine);
+						engineDropdown.classList.remove('show');
+						searchInput.focus();
+					});
+				});
+				
+				// Close dropdown when clicking outside
+				document.addEventListener('click', (e) => {
+					if (!e.target.closest('.search-engine-selector')) {
+						engineDropdown.classList.remove('show');
+					}
+				});
+				
+				// Focus search input on key press
+				document.addEventListener('keydown', (e) => {
+					if (document.activeElement !== searchInput && e.key.length === 1) {
+						searchInput.focus();
+					}
+				});
 			});
 		</script>
 	</body>
