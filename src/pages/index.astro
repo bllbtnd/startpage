@@ -2,7 +2,12 @@
 	<head>
 		<meta charset="utf-8" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+		<meta name="theme-color" content="#0a0a0a" />
+		<meta name="mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+		<link rel="manifest" href="/manifest.webmanifest" />
 		<meta name="generator" content={Astro.generator} />
 		<title>New Tab</title>
 		<link rel="stylesheet" href="/style.css" />
@@ -25,7 +30,7 @@
 				<form class="search-form" id="searchForm" action="https://duckduckgo.com/" method="get">
 				<div class="search-engine-selector">
 					<button type="button" class="engine-btn" id="engineBtn">
-						<img src="/favicon.svg" alt="DuckDuckGo" class="engine-icon" id="engineIcon" />
+						<img src="https://duckduckgo.com/favicon.ico" alt="DuckDuckGo" class="engine-icon" id="engineIcon" />
 						<svg class="dropdown-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 							<polyline points="6,9 12,15 18,9"></polyline>
 						</svg>

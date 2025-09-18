@@ -4,12 +4,21 @@
 	box-sizing: border-box;
 }
 
+html, body {
+    height: 100%;
+}
+
 body {
 	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 	background: #0a0a0a;
 	color: #e5e5e5;
-	height: 100vh;
+	/* Use dynamic viewport height to avoid browser URL bar resize jump on mobile */
+	height: 100dvh;
+	min-height: 100vh; /* fallback */
 	overflow: hidden;
+	overscroll-behavior: none;
+	-webkit-overflow-scrolling: auto;
+	touch-action: manipulation;
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
@@ -81,11 +90,12 @@ body {
 	width: 100%;
 	display: flex;
 	align-items: center;
+	gap: 0.75rem;
 }
 
 .search-engine-selector {
 	position: relative;
-	margin-right: 0.75rem;
+	/* spacing handled by .search-form gap */
 }
 
 .engine-btn {
@@ -214,7 +224,7 @@ body {
 
 .search-input {
 	flex: 1;
-	padding: 1.25rem 3rem 1.25rem 1.5rem;
+	padding: 1.125rem 2.75rem 1.125rem 1.25rem;
 	font-size: 1.125rem;
 	background: #1a1a1a;
 	border: 2px solid #333;
@@ -222,6 +232,8 @@ body {
 	color: #e5e5e5;
 	outline: none;
 	transition: all 0.3s ease;
+    -webkit-appearance: none;
+    appearance: none;
 }
 
 .search-input:focus {
@@ -256,9 +268,12 @@ body {
 		padding: 1rem;
 	}
 	
+	.search-form { gap: 0.5rem; }
+
 	.search-input {
-		padding: 1rem 3rem 1rem 1.25rem;
-		font-size: 1rem;
+		height: 3rem;
+		padding: 0.9rem 2.5rem 0.9rem 1rem;
+		font-size: 1.05rem;
 	}
 	
 	.search-btn {
@@ -267,14 +282,12 @@ body {
 	}
 	
 	.engine-btn {
-		height: 3.25rem;
-		min-width: 3.25rem;
+		height: 3rem;
+		min-width: 3rem;
 		padding: 0.625rem;
 	}
 	
-	.search-engine-selector {
-		margin-right: 0.5rem;
-	}
+	.search-engine-selector { margin-right: 0; }
 	
 	.engine-dropdown {
 		min-width: 180px;
