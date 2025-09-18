@@ -104,7 +104,7 @@
 			// Load saved engine from localStorage
 			function loadSavedEngine() {
 				const saved = localStorage.getItem('search-engine');
-				if (saved && searchEngines[saved]) {
+				if (saved && searchEngines[saved as keyof typeof searchEngines]) {
 					currentEngine = saved;
 				}
 				updateSearchEngine(currentEngine);
@@ -117,11 +117,13 @@
 
 			// Update the search form and UI
 			function updateSearchEngine(engine) {
-				const form = document.getElementById('searchForm');
-				const engineIcon = document.getElementById('engineIcon');
-				const searchInput = document.getElementById('searchQuery');
+				const form = document.getElementById('searchForm') as HTMLFormElement;
+				const engineIcon = document.getElementById('engineIcon') as HTMLImageElement;
+				const searchInput = document.getElementById('searchQuery') as HTMLInputElement;
 				
-				const engineData = searchEngines[engine];
+				if (!form || !engineIcon || !searchInput) return;
+				
+				const engineData = searchEngines[engine as keyof typeof searchEngines];
 				
 				// Update form action and input name
 				form.action = engineData.url;
@@ -135,7 +137,10 @@
 				document.querySelectorAll('.engine-option').forEach(option => {
 					option.classList.remove('active');
 				});
-				document.querySelector(`[data-engine="${engine}"]`).classList.add('active');
+				const activeOption = document.querySelector(`[data-engine="${engine}"]`);
+				if (activeOption) {
+					activeOption.classList.add('active');
+				}
 				
 				currentEngine = engine;
 			}
@@ -146,7 +151,9 @@
 				
 				const engineBtn = document.getElementById('engineBtn');
 				const engineDropdown = document.getElementById('engineDropdown');
-				const searchInput = document.querySelector('.search-input');
+				const searchInput = document.querySelector('.search-input') as HTMLInputElement;
+				
+				if (!engineBtn || !engineDropdown || !searchInput) return;
 				
 				// Toggle dropdown
 				engineBtn.addEventListener('click', (e) => {
@@ -157,17 +164,20 @@
 				// Handle engine selection
 				document.querySelectorAll('.engine-option').forEach(option => {
 					option.addEventListener('click', () => {
-						const engine = option.dataset.engine;
-						updateSearchEngine(engine);
-						saveEngine(engine);
-						engineDropdown.classList.remove('show');
-						searchInput.focus();
+						const engine = option.getAttribute('data-engine');
+						if (engine) {
+							updateSearchEngine(engine);
+							saveEngine(engine);
+							engineDropdown.classList.remove('show');
+							searchInput.focus();
+						}
 					});
 				});
 				
 				// Close dropdown when clicking outside
 				document.addEventListener('click', (e) => {
-					if (!e.target.closest('.search-engine-selector')) {
+					const target = e.target as HTMLElement;
+					if (target && !target.closest('.search-engine-selector')) {
 						engineDropdown.classList.remove('show');
 					}
 				});
