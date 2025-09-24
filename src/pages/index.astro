@@ -94,6 +94,48 @@
 					</svg>
 				</button>
 			</form>
+			
+			<!-- Quick Links -->
+			<div class="quick-links" id="quickLinks">
+				<div class="links-container" id="linksContainer">
+					<!-- Links will be populated by JavaScript -->
+				</div>
+				<button class="add-link-btn" id="addLinkBtn" title="Add Quick Link">
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+						<line x1="12" y1="5" x2="12" y2="19"></line>
+						<line x1="5" y1="12" x2="19" y2="12"></line>
+					</svg>
+				</button>
+			</div>
+
+			<!-- Add Link Modal -->
+			<div class="modal-overlay" id="modalOverlay">
+				<div class="modal">
+					<div class="modal-header">
+						<h3>Add Quick Link</h3>
+						<button class="modal-close" id="modalClose">
+							<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+								<line x1="18" y1="6" x2="6" y2="18"></line>
+								<line x1="6" y1="6" x2="18" y2="18"></line>
+							</svg>
+						</button>
+					</div>
+					<div class="modal-body">
+						<div class="input-group">
+							<label for="linkName">Name</label>
+							<input type="text" id="linkName" placeholder="e.g. GitHub" maxlength="20" />
+						</div>
+						<div class="input-group">
+							<label for="linkUrl">URL</label>
+							<input type="url" id="linkUrl" placeholder="https://github.com" />
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button class="btn btn-secondary" id="modalCancel">Cancel</button>
+						<button class="btn btn-primary" id="modalSave">Add Link</button>
+					</div>
+				</div>
+			</div>
 			</div>
 		</div>
 
@@ -205,6 +247,131 @@
 				}
 			}
 
+			// Quick Links functionality
+			interface QuickLink {
+				id: string;
+				name: string;
+				url: string;
+			}
+
+			function getQuickLinks(): QuickLink[] {
+				const links = localStorage.getItem('quickLinks');
+				return links ? JSON.parse(links) : [];
+			}
+
+			function saveQuickLinks(links: QuickLink[]): void {
+				localStorage.setItem('quickLinks', JSON.stringify(links));
+			}
+
+			function addQuickLink(name: string, url: string): void {
+				const links = getQuickLinks();
+				const newLink: QuickLink = {
+					id: Date.now().toString(),
+					name: name.trim(),
+					url: url.trim()
+				};
+				links.push(newLink);
+				saveQuickLinks(links);
+				renderQuickLinks();
+			}
+
+			function removeQuickLink(id: string): void {
+				const links = getQuickLinks().filter(link => link.id !== id);
+				saveQuickLinks(links);
+				renderQuickLinks();
+			}
+
+			function renderQuickLinks(): void {
+				const container = document.getElementById('linksContainer') as HTMLElement;
+				const quickLinksSection = document.getElementById('quickLinks') as HTMLElement;
+				
+				if (!container || !quickLinksSection) return;
+				
+				const links = getQuickLinks();
+				container.innerHTML = '';
+				
+				if (links.length === 0) {
+					quickLinksSection.classList.add('empty');
+				} else {
+					quickLinksSection.classList.remove('empty');
+				}
+				
+				links.forEach(link => {
+					const linkElement = document.createElement('div');
+					linkElement.className = 'quick-link-item';
+					
+					linkElement.innerHTML = `
+						<a href="${link.url}" target="_blank" rel="noopener noreferrer" class="link-button">
+							<span class="link-name">${link.name}</span>
+							<span class="link-domain">${getDomain(link.url)}</span>
+						</a>
+						<button class="remove-link" data-id="${link.id}" title="Remove ${link.name}">
+							<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+								<line x1="18" y1="6" x2="6" y2="18"></line>
+								<line x1="6" y1="6" x2="18" y2="18"></line>
+							</svg>
+						</button>
+					`;
+					
+					container.appendChild(linkElement);
+				});
+				
+				// Add event listeners for remove buttons
+				container.querySelectorAll('.remove-link').forEach(btn => {
+					btn.addEventListener('click', (e) => {
+						e.preventDefault();
+						const id = (e.currentTarget as HTMLElement).getAttribute('data-id');
+						if (id) removeQuickLink(id);
+					});
+				});
+			}
+
+			function getDomain(url: string): string {
+				try {
+					return new URL(url).hostname.replace('www.', '');
+				} catch {
+					return '';
+				}
+			}
+
+			function showAddLinkModal(): void {
+				const modal = document.getElementById('modalOverlay') as HTMLElement;
+				const nameInput = document.getElementById('linkName') as HTMLInputElement;
+				const urlInput = document.getElementById('linkUrl') as HTMLInputElement;
+				
+				if (modal && nameInput && urlInput) {
+					nameInput.value = '';
+					urlInput.value = '';
+					modal.classList.add('show');
+					nameInput.focus();
+				}
+			}
+
+			function hideAddLinkModal(): void {
+				const modal = document.getElementById('modalOverlay') as HTMLElement;
+				if (modal) {
+					modal.classList.remove('show');
+				}
+			}
+
+			function handleAddLink(): void {
+				const nameInput = document.getElementById('linkName') as HTMLInputElement;
+				const urlInput = document.getElementById('linkUrl') as HTMLInputElement;
+				
+				if (!nameInput || !urlInput) return;
+				
+				const name = nameInput.value.trim();
+				const url = urlInput.value.trim();
+				
+				if (!name || !url) return;
+				
+				// Add protocol if missing
+				const finalUrl = url.startsWith('http') ? url : `https://${url}`;
+				
+				addQuickLink(name, finalUrl);
+				hideAddLinkModal();
+			}
+
 			// Initialize on page load
 			document.addEventListener('DOMContentLoaded', () => {
 				loadSavedEngine();
@@ -213,6 +380,13 @@
 				const engineDropdown = document.getElementById('engineDropdown');
 				const searchInput = document.querySelector('.search-input') as HTMLInputElement;
 				const clockToggle = document.getElementById('clockToggle') as HTMLButtonElement;
+				const addLinkBtn = document.getElementById('addLinkBtn') as HTMLButtonElement;
+				const modalOverlay = document.getElementById('modalOverlay') as HTMLElement;
+				const modalClose = document.getElementById('modalClose') as HTMLButtonElement;
+				const modalCancel = document.getElementById('modalCancel') as HTMLButtonElement;
+				const modalSave = document.getElementById('modalSave') as HTMLButtonElement;
+				const linkNameInput = document.getElementById('linkName') as HTMLInputElement;
+				const linkUrlInput = document.getElementById('linkUrl') as HTMLInputElement;
 				
 				if (!engineBtn || !engineDropdown || !searchInput) return;
 				
@@ -221,9 +395,45 @@
 				updateClock();
 				setInterval(updateClock, 1000);
 				
+				// Load quick links
+				renderQuickLinks();
+				
 				// Clock toggle functionality
 				if (clockToggle) {
 					clockToggle.addEventListener('click', toggleClock);
+				}
+				
+				// Quick links functionality
+				if (addLinkBtn) {
+					addLinkBtn.addEventListener('click', showAddLinkModal);
+				}
+				
+				if (modalClose && modalCancel) {
+					modalClose.addEventListener('click', hideAddLinkModal);
+					modalCancel.addEventListener('click', hideAddLinkModal);
+				}
+				
+				if (modalOverlay) {
+					modalOverlay.addEventListener('click', (e) => {
+						if (e.target === modalOverlay) {
+							hideAddLinkModal();
+						}
+					});
+				}
+				
+				if (modalSave) {
+					modalSave.addEventListener('click', handleAddLink);
+				}
+				
+				// Handle Enter key in modal inputs
+				if (linkNameInput && linkUrlInput) {
+					const handleEnter = (e: KeyboardEvent) => {
+						if (e.key === 'Enter') {
+							handleAddLink();
+						}
+					};
+					linkNameInput.addEventListener('keydown', handleEnter);
+					linkUrlInput.addEventListener('keydown', handleEnter);
 				}
 				
 				// Toggle dropdown
@@ -255,7 +465,15 @@
 				
 				// Focus search input on key press
 				document.addEventListener('keydown', (e) => {
-					if (document.activeElement !== searchInput && e.key.length === 1) {
+					const modal = document.getElementById('modalOverlay') as HTMLElement;
+					const isModalOpen = modal && modal.classList.contains('show');
+					
+					// Don't auto-focus search if modal is open or if already focused on an input
+					if (isModalOpen || document.activeElement?.tagName === 'INPUT' || document.activeElement === searchInput) {
+						return;
+					}
+					
+					if (e.key.length === 1) {
 						searchInput.focus();
 					}
 				});
